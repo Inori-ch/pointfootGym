@@ -138,14 +138,14 @@ class PointFootRoughCfg(BaseConfig):
     class rewards:
         class scales:
             action_rate = -0.01
-            ang_vel_xy = -0.05
+            ang_vel_xy = -100 # -0.05
             base_height = -2.0
             collision = -50.0
             dof_acc = -2.5e-07
-            feet_air_time = 0.0
+            feet_air_time = 0.1 # 0.0
             torque_limits = -0.1
             torques = -2.5e-05
-            feet_distance = -100
+            feet_distance = 0 # -100
             survival = 1
 
         base_height_target = 0.62

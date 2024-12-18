@@ -89,6 +89,18 @@ class PointFoot:
                 self.viewer, gymapi.KEY_ESCAPE, "QUIT")
             self.gym.subscribe_viewer_keyboard_event(
                 self.viewer, gymapi.KEY_V, "toggle_viewer_sync")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_W, "xfaster")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_S, "xslower")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_A, "yfaster")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_D, "yslower")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_Q, "rotate")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_E, "donotrotate")
         self._include_feet_height_rewards = self._check_if_include_feet_height_rewards()
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
@@ -121,6 +133,18 @@ class PointFoot:
                     sys.exit()
                 elif evt.action == "toggle_viewer_sync" and evt.value > 0:
                     self.enable_viewer_sync = not self.enable_viewer_sync
+                elif evt.action == "xfaster" and evt.value > 0:
+                    self.cfg.rewards.base_linear_vel_target_x += 0.1
+                elif evt.action == "xslower" and evt.value > 0:
+                    self.cfg.rewards.base_linear_vel_target_x -= 0.1
+                elif evt.action == "yfaster" and evt.value > 0:
+                    self.cfg.rewards.base_linear_vel_target_y += 0.1
+                elif evt.action == "yslower" and evt.value > 0:
+                    self.cfg.rewards.base_linear_vel_target_y -= 0.1
+                elif evt.action == "rotate" and evt.value > 0:
+                    self.cfg.rewards.base_angular_vel_target += 0.1
+                elif evt.action == "donotrotate" and evt.value > 0:
+                    self.cfg.rewards.base_angular_vel_target -= 0.1
 
             # fetch results
             if self.device != 'cpu':
@@ -1148,3 +1172,30 @@ class PointFoot:
 
     def _reward_survival(self):
         return (~self.reset_buf).float()
+
+    def _reward_quaternion(self):
+        # Penalize base quaternion
+        w, x, y, z = self.base_quat[:, 0], self.base_quat[:, 1], self.base_quat[:, 2], self.base_quat[:, 3]
+        # Roll (X轴旋转)
+        roll = torch.atan2(2 * (w * x + y * z), 1 - 2 * (x**2 + y**2))
+        # Pitch (Y轴旋转)
+        pitch = torch.asin(2 * (w * y - z * x))
+        # print(f"Roll: {roll}, Pitch: {pitch}, Yaw: {yaw}")
+        return torch.sum(torch.square(roll)+torch.square(pitch), dim=0)
+
+    def _reward_linear_velocity_x(self):
+        # Penalize linear velocity error
+        base_vel = torch.mean(self.base_lin_vel[:, 0], dim=0)
+        return torch.square(base_vel - self.cfg.rewards.base_linear_vel_target_x)
+
+    def _reward_linear_velocity_y(self):
+        # Penalize linear velocity error
+        base_vel = torch.mean(self.base_lin_vel[:, 1], dim=0)
+        return torch.square(base_vel - self.cfg.rewards.base_linear_vel_target_y)
+
+
+    def _reward_angular_velocity(self):
+        # Penalize angular velocity error
+        base_angular_vel = torch.mean(self.base_ang_vel[:, 2], dim=0)
+        return torch.square(base_angular_vel - self.cfg.rewards.base_angular_vel_target)
+

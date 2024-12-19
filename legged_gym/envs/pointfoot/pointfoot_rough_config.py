@@ -138,22 +138,24 @@ class PointFootRoughCfg(BaseConfig):
     class rewards:
         class scales:
             action_rate = -0.01
-            ang_vel_xy = -1 # -0.05
-            base_height = -2.0
-            collision = -50.0
+            ang_vel_xy = -0.05 # -0.05
+            base_height = -0.2
+            collision = -50
             dof_acc = -2.5e-07
-            feet_air_time = 0.001 # 0.0
+            feet_air_time = -0.001 # 0.0
             torque_limits = -0.1
             torques = -2.5e-05
-            feet_distance = -10 # -100
-            survival = 1
-            quaternion = -0.01
-            linear_velocity_x = 0.01
-            linear_velocity_y = 0.01
-            angular_velocity = 0.01
+            feet_distance = -10
+            survival = 10
+            quaternion = -0.001
+            lvel_error = -0.0002
+            avel_error = -0.00005
+            lvel = 1e-5
+            # avel = 0.0
+
 
         base_height_target = 0.62
-        base_linear_vel_target_x = 1.0
+        base_linear_vel_target_x = 0.1
         base_linear_vel_target_y = 0.0
         base_angular_vel_target = 0.0
         soft_dof_pos_limit = 0.95  # percentage of urdf limits, values above this limit are penalized
